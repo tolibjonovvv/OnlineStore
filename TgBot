@@ -1,0 +1,53 @@
+from aiogram import Bot, types
+from aiogram.dispatcher import Dispatcher
+from aiogram.utils import executor
+from aiogram.dispatcher.filters import Command
+
+categories = ['Notebook', 'Smartphone']
+
+products = {
+    'Notebook': [
+        {'name': 'asus', 'price': 1000},
+        {'name': 'hp', 'price': 1500},
+        {'name': 'dell', 'price': 1200},
+        {'name': 'MacBook Air', 'price': 1800},
+        {'name': 'Spectre', 'price': 2000},
+    ],
+    'Smartphone': [
+        {'name': 'iPhone 13', 'price': 500},
+        {'name': 'Xiaomi Mi 11', 'price': 700},
+        {'name': 'OnePlus 9', 'price': 600},
+        {'name': 'Sumsung S24', 'price': 900},
+        {'name': 'iPhone 5', 'price': 800},
+    ]
+}
+
+bot = Bot(token="Botning tokeni")
+dp = Dispatcher(bot)
+
+@dp.message_handler(Command('start'))
+async def start(message: types.Message):
+    await message.answer("Assalomu alaykum! Maxsulot kategoriyasini tanlang: Notebook yoki Smartphone",
+                         reply_markup=types.ReplyKeyboardRemove())
+
+@dp.message_handler(lambda message: message.text in categories)
+async def show_products(message: types.Message):
+    category = message.text
+    products_list = products[category]
+    buttons = [types.KeyboardButton(product['name']) for product in products_list]
+    keyboard_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    keyboard_markup.add(*buttons)
+    await message.answer('Maxsulotni tanlang:', reply_markup=keyboard_markup)
+
+@dp.message_handler(lambda message: any(product['name'] == message.text for product in products['Notebook']) or
+                                   any(product['name'] == message.text for product in products['Smartphone']))
+async def show_product_info(message: types.Message):
+    product_name = message.text
+    for category, product_list in products.items():
+        for product in product_list:
+            if product['name'] == product_name:
+                await message.answer(f"Maxsulot nomi: {product['name']}, Narxi: {product['price']}")
+                break
+
+if __name__ == '__main__':
+    executor.start_polling(dp, skip_updates=True)
